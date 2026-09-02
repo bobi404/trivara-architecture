@@ -7,8 +7,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const header = document.getElementById('header');
     const mobileToggle = document.getElementById('mobileToggle');
     const mainNav = document.getElementById('mainNav');
+    const navBackdrop = document.getElementById('navBackdrop');
     const sections = document.querySelectorAll('section[id]');
     const navLinks = document.querySelectorAll('.nav-link');
+
+    // Toggle Mobile Navigation Function
+    function toggleMobileMenu(forceClose = false) {
+        if (!mainNav) return;
+        const isOpen = mainNav.classList.contains('active');
+
+        if (forceClose || isOpen) {
+            mainNav.classList.remove('active');
+            if (mobileToggle) mobileToggle.classList.remove('active');
+            if (navBackdrop) navBackdrop.classList.remove('active');
+            document.body.style.overflow = '';
+        } else {
+            mainNav.classList.add('active');
+            if (mobileToggle) mobileToggle.classList.add('active');
+            if (navBackdrop) navBackdrop.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    if (mobileToggle) {
+        mobileToggle.addEventListener('click', () => toggleMobileMenu());
+    }
+
+    if (navBackdrop) {
+        navBackdrop.addEventListener('click', () => toggleMobileMenu(true));
+    }
 
     // ScrollSpy: Garis bawah navbar otomatis mengikuti seksi yang sedang aktif
     function updateActiveNavLink() {
@@ -53,15 +80,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 navLinks.forEach(l => l.classList.remove('active'));
                 this.classList.add('active');
             }
-            if (mainNav) mainNav.classList.remove('active');
+            toggleMobileMenu(true);
         });
     });
-
-    if (mobileToggle && mainNav) {
-        mobileToggle.addEventListener('click', () => {
-            mainNav.classList.toggle('active');
-        });
-    }
 
     // Theme Toggle (Dark / Light)
     const themeToggle = document.getElementById('themeToggle');
