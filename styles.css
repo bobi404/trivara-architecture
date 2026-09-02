@@ -184,7 +184,8 @@ h1, h2, h3, h4, h5, h6 {
     text-decoration: none;
     transition: var(--transition);
     border: none;
-    white-space: nowrap;
+    white-space: normal;
+    text-align: center;
 }
 
 .btn-lg {
@@ -1157,17 +1158,27 @@ body.light-theme .hero-stats-bar {
     gap: 0.75rem;
 }
 
-/* Contact & Form Section */
+/* ==========================================================================
+   CONTACT SECTION (Dedicated Fully-Responsive Styling)
+   ========================================================================== */
+.contact-section {
+    position: relative;
+    overflow: hidden;
+}
+
 .contact-wrapper {
     display: grid;
     grid-template-columns: 1fr 1.1fr;
     gap: 3.5rem;
     padding: 3.5rem;
+    box-sizing: border-box;
+    width: 100%;
 }
 
 .contact-info {
     display: flex;
     flex-direction: column;
+    min-width: 0; /* Mencegah flex child overflow */
 }
 
 .contact-desc {
@@ -1187,6 +1198,20 @@ body.light-theme .hero-stats-bar {
     display: flex;
     align-items: flex-start;
     gap: 1.25rem;
+    min-width: 0;
+}
+
+.contact-item strong {
+    display: block;
+    font-size: 0.95rem;
+    margin-bottom: 0.2rem;
+}
+
+.contact-item p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    word-break: break-word; /* Mencegah nomor telepon/email panjang meluap */
+    overflow-wrap: break-word;
 }
 
 .contact-icon {
@@ -1202,20 +1227,10 @@ body.light-theme .hero-stats-bar {
     flex-shrink: 0;
 }
 
-.contact-item strong {
-    display: block;
-    font-size: 0.95rem;
-    margin-bottom: 0.2rem;
-}
-
-.contact-item p {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-}
-
 .social-links {
     display: flex;
     gap: 0.85rem;
+    flex-wrap: wrap;
 }
 
 .social-btn {
@@ -1248,12 +1263,15 @@ body.light-theme .hero-stats-bar {
     background: #1eb856;
 }
 
-/* Contact Form */
+/* Contact Form Card */
 .contact-form-card {
     background: rgba(0, 0, 0, 0.25);
     padding: 2.5rem;
     border-radius: var(--radius-md);
     border: 1px solid var(--border-glass);
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
 }
 
 .form-title {
@@ -1262,14 +1280,21 @@ body.light-theme .hero-stats-bar {
     margin-bottom: 1.5rem;
 }
 
+.contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
 .contact-form .form-group {
-    margin-bottom: 1.25rem;
+    margin-bottom: 0;
+    width: 100%;
 }
 
 .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    gap: 1.25rem;
 }
 
 .contact-form label {
@@ -1288,9 +1313,10 @@ body.light-theme .hero-stats-bar {
     border-radius: var(--radius-sm);
     color: var(--text-primary);
     font-family: var(--font-body);
-    font-size: 0.95rem;
+    font-size: 1rem; /* minimum 16px untuk mencegah auto-zoom di browser HP */
     outline: none;
     transition: var(--transition);
+    box-sizing: border-box;
 }
 
 body.light-theme .form-control {
@@ -1300,6 +1326,22 @@ body.light-theme .form-control {
 .form-control:focus {
     border-color: var(--accent-gold);
     box-shadow: 0 0 0 3px var(--accent-gold-glow);
+}
+
+select.form-control {
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c8a97e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-no-repeat;
+    background-position: right 1rem center;
+    background-size: 1.1rem;
+    padding-right: 2.5rem;
+}
+
+select.form-control option {
+    background: #121418;
+    color: #fff;
 }
 
 /* Footer Section */
@@ -1520,8 +1562,14 @@ body.light-theme .site-footer {
         gap: 2rem;
     }
 
+    /* Responsivitas Kontak Khusus Tablet */
     .contact-wrapper {
         grid-template-columns: 1fr;
+        padding: 2rem;
+        gap: 2.5rem;
+    }
+
+    .contact-form-card {
         padding: 2rem;
     }
 
@@ -1534,7 +1582,7 @@ body.light-theme .site-footer {
 /* Mobile & Tablet Portrait (max-width: 768px) */
 @media (max-width: 768px) {
     .header-actions .btn-primary {
-        display: none; /* Sembunyikan tombol header besar pada layar HP kecil */
+        display: none;
     }
 
     .mobile-toggle {
@@ -1643,16 +1691,51 @@ body.light-theme .site-footer {
         gap: 0.25rem;
     }
 
+    /* Responsivitas Kontak Layar HP (768px) */
     .contact-wrapper {
         padding: 1.5rem;
+        gap: 2rem;
+        border-radius: var(--radius-md);
+    }
+
+    .contact-desc {
+        font-size: 0.95rem;
+        margin-bottom: 1.75rem;
+    }
+
+    .contact-details {
+        gap: 1.25rem;
+        margin-bottom: 1.75rem;
+    }
+
+    .contact-item {
+        gap: 1rem;
+    }
+
+    .contact-icon {
+        width: 38px;
+        height: 38px;
+        font-size: 1rem;
     }
 
     .contact-form-card {
-        padding: 1.5rem;
+        padding: 1.5rem 1.25rem;
+    }
+
+    .form-title {
+        font-size: 1.3rem;
+        margin-bottom: 1.25rem;
     }
 
     .form-row {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr; /* Tumpuk No WA & Kota menjadi 1 kolom */
+        gap: 1.25rem;
+    }
+
+    .contact-form .btn {
+        width: 100%;
+        padding: 0.95rem 1rem;
+        font-size: 0.925rem;
     }
 
     .footer-content {
@@ -1670,7 +1753,7 @@ body.light-theme .site-footer {
 /* Extra Small Devices & Smartphones (max-width: 480px) */
 @media (max-width: 480px) {
     .container {
-        padding: 0 1rem;
+        padding: 0 0.85rem;
     }
 
     .brand-name {
@@ -1702,7 +1785,7 @@ body.light-theme .site-footer {
     }
 
     .service-card {
-        padding: 2rem 1.25rem;
+        padding: 1.75rem 1.1rem;
     }
 
     .service-title {
@@ -1752,7 +1835,32 @@ body.light-theme .site-footer {
         font-size: 1.6rem;
     }
 
+    /* Responsivitas Kontak Layar HP Sangat Kecil (480px) */
+    .contact-wrapper {
+        padding: 1.1rem 0.85rem;
+        border-radius: var(--radius-sm);
+    }
+
+    .contact-form-card {
+        padding: 1.25rem 0.85rem;
+        border-radius: var(--radius-sm);
+    }
+
+    .form-control {
+        padding: 0.75rem 0.85rem;
+        font-size: 0.95rem;
+    }
+
+    .contact-item p {
+        font-size: 0.85rem;
+    }
+
     .social-links {
-        justify-content: center;
+        justify-content: flex-start;
+    }
+
+    .social-btn {
+        width: 38px;
+        height: 38px;
     }
 }
