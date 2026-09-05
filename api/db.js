@@ -1,23 +1,29 @@
 /* ==========================================================================
    TRIVARA — Server-side Database API (Vercel Serverless Function)
+   Backed by Vercel Blob (durable object storage — persists on the free
+   Hobby plan, unlike Upstash Redis' free RAM-only tier).
+
    GET  /api/db  -> { data: <object|null> }   (public, read-only)
    POST /api/db  -> { ok: true }              (requires x-admin-token header)
    ========================================================================== */
 
-const { Redis } = require('@upstash/redis');
+const { put, list } = require('@vercel/blob');
 
-const DB_KEY = 'trivara_db';
-
-// Redis.fromEnv() reads UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN,
-// which Vercel injects automatically once you connect the Upstash Redis
-// integration to this project (see setup instructions).
-const redis = Redis.fromEnv();
+const DB_PATHNAME = 'trivara-db.json';
 
 module.exports = async function handler(req, res) {
     if (req.method === 'GET') {
         try {
-            const data = await redis.get(DB_KEY);
-            return res.status(200).json({ data: data || null });
+            const { blobs } = await list({ prefix: DB_PATHNAME, limit: 1 });
+            if (!blobs.length) {
+                return res.status(200).json({ data: null });
+            }
+            const fileRes = await fetch(blobs[0].url, { cache: 'no-store' });
+            if (!fileRes.ok) {
+                return res.status(200).json({ data: null });
+            }
+            const data = await fileRes.json();
+            return res.status(200).json({ data });
         } catch (err) {
             console.error('DB GET error:', err);
             return res.status(500).json({ error: 'Gagal mengambil data dari database.' });
@@ -43,7 +49,16 @@ module.exports = async function handler(req, res) {
         }
 
         try {
-            await redis.set(DB_KEY, body);
+            await put(DB_PATHNAME, JSON.stringify(body), {
+                access: 'public',
+                contentType: 'application/json',
+                addRandomSuffix: false,
+                allowOverwrite: true,
+                // 60 seconds is the minimum Vercel Blob allows. Saves may take
+                // up to ~1 minute to be visible to other visitors — acceptable
+                // for an admin panel that isn't edited in real time.
+                cacheControlMaxAge: 60
+            });
             return res.status(200).json({ ok: true });
         } catch (err) {
             console.error('DB POST error:', err);
@@ -54,3 +69,4 @@ module.exports = async function handler(req, res) {
     res.setHeader('Allow', ['GET', 'POST']);
     return res.status(405).json({ error: 'Method Not Allowed' });
 };
+
