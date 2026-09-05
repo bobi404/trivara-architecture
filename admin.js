@@ -31,6 +31,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Default credentials: admin / trivara2026
             if (user === 'admin' && pass === 'trivara2026') {
                 sessionStorage.setItem('trivara_admin_auth', 'true');
+                // Used to authenticate save requests to /api/db — must match
+                // the ADMIN_API_TOKEN environment variable set on Vercel.
+                sessionStorage.setItem('trivara_admin_token', pass);
                 if (loginError) loginError.style.display = 'none';
                 checkAuth();
                 showToast('Login berhasil! Selamat datang di Backoffice TRIVARA.');
@@ -43,11 +46,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
             sessionStorage.removeItem('trivara_admin_auth');
+            sessionStorage.removeItem('trivara_admin_token');
             checkAuth();
         });
     }
 
     checkAuth();
+
+    // Warn if a save didn't actually reach the server (e.g. wrong/missing
+    // ADMIN_API_TOKEN, or the Upstash Redis integration isn't connected).
+    window.addEventListener('trivara_db_save_error', () => {
+        showToast('⚠️ Perubahan tersimpan di browser ini saja — GAGAL menyimpan ke server. Cek konfigurasi API.');
+    });
 
     // 2. DASHBOARD TABS NAVIGATION
     const sidebarItems = document.querySelectorAll('.sidebar-item');

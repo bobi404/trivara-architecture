@@ -166,8 +166,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Listen for live database updates
+    // Listen for live database updates (same-tab, e.g. after a form submit on this page)
     window.addEventListener('trivara_db_updated', renderPublicSite);
+
+    // Listen for updates coming from OTHER tabs/windows (e.g. admin.html saving changes).
+    // The native 'storage' event only fires in tabs OTHER than the one that made the change,
+    // which is exactly what we need for admin -> public page live sync.
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'trivara_db') {
+            renderPublicSite();
+        }
+    });
+
     renderPublicSite();
 
     // 1. Header Navigation, Mobile Toggle, & Dynamic ScrollSpy

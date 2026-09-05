@@ -197,32 +197,106 @@ const TRIVARA_DEFAULT_DATA = {
     ]
 };
 
-// Database Engine Methods
+/* ==========================================================================
+   Database Engine
+   ----------------------------------------------------------------------
+   Public API stays exactly the same as before (DB.get() / DB.set() / DB.reset(),
+   all synchronous) so admin.js and app.js don't need to change.
+
+   Under the hood:
+   - localStorage is now just a fast local CACHE, not the source of truth.
+   - The real source of truth is the server (/api/db -> Upstash Redis),
+     shared by every visitor and device.
+   - On page load, DB.syncFromServer() fetches the latest data and, once it
+     arrives, updates the cache and fires 'trivara_db_updated' so the page
+     re-renders with fresh data.
+   - DB.set()/DB.reset() update the local cache immediately (instant UI
+     feedback) and push the change to the server in the background.
+   ========================================================================== */
+
+const DB_STORAGE_KEY = 'trivara_db';
+const DB_API_URL = '/api/db';
+
+let _dbCache = null;
+
+function loadLocalCache() {
+    const raw = localStorage.getItem(DB_STORAGE_KEY);
+    if (!raw) return TRIVARA_DEFAULT_DATA;
+    try {
+        return JSON.parse(raw);
+    } catch (e) {
+        console.error('Failed to parse cached trivara_db, using default', e);
+        return TRIVARA_DEFAULT_DATA;
+    }
+}
+
+_dbCache = loadLocalCache();
+
 const DB = {
     get() {
-        const raw = localStorage.getItem('trivara_db');
-        if (!raw) {
-            this.set(TRIVARA_DEFAULT_DATA);
-            return TRIVARA_DEFAULT_DATA;
-        }
-        try {
-            return JSON.parse(raw);
-        } catch (e) {
-            console.error("Failed to parse trivara_db, resetting to default", e);
-            this.set(TRIVARA_DEFAULT_DATA);
-            return TRIVARA_DEFAULT_DATA;
-        }
+        return _dbCache;
     },
     set(data) {
-        localStorage.setItem('trivara_db', JSON.stringify(data));
+        _dbCache = data;
+        localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(data));
         window.dispatchEvent(new Event('trivara_db_updated'));
+        this._pushToServer(data);
     },
     reset() {
-        localStorage.setItem('trivara_db', JSON.stringify(TRIVARA_DEFAULT_DATA));
+        _dbCache = TRIVARA_DEFAULT_DATA;
+        localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(TRIVARA_DEFAULT_DATA));
         window.dispatchEvent(new Event('trivara_db_updated'));
+        this._pushToServer(TRIVARA_DEFAULT_DATA);
         return TRIVARA_DEFAULT_DATA;
+    },
+
+    // Push local data to the server. Fire-and-forget from callers' point of
+    // view, but emits 'trivara_db_save_error' if it fails so the UI can warn
+    // the admin that the change did NOT reach other visitors.
+    async _pushToServer(data) {
+        try {
+            const token = sessionStorage.getItem('trivara_admin_token') || '';
+            const res = await fetch(DB_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-token': token
+                },
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) {
+                const info = await res.json().catch(() => ({}));
+                console.error('Gagal menyimpan ke server:', res.status, info);
+                window.dispatchEvent(new CustomEvent('trivara_db_save_error', { detail: info }));
+            }
+        } catch (e) {
+            console.error('Gagal menyimpan ke server (jaringan):', e);
+            window.dispatchEvent(new CustomEvent('trivara_db_save_error', { detail: { error: String(e) } }));
+        }
+    },
+
+    // Pull the latest data from the server. Called once automatically below.
+    // Safe to call again any time (e.g. after re-focusing the admin tab).
+    async syncFromServer() {
+        try {
+            const res = await fetch(DB_API_URL);
+            if (!res.ok) return;
+            const json = await res.json();
+            if (json && json.data) {
+                _dbCache = json.data;
+                localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(json.data));
+                window.dispatchEvent(new Event('trivara_db_updated'));
+            } else {
+                // Server has no data yet (first deploy) — seed it with what
+                // we have locally so it becomes the shared source of truth.
+                this._pushToServer(_dbCache);
+            }
+        } catch (e) {
+            console.warn('Tidak bisa mengambil data terbaru dari server, memakai cache lokal.', e);
+        }
     }
 };
 
-// Ensure DB initializes immediately on script execution
-DB.get();
+// Ensure a usable cache exists immediately (sync), then refresh from the
+// server in the background as soon as the script runs.
+DB.syncFromServer();
