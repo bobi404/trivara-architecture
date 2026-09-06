@@ -137,6 +137,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('aboutTitle').value = db.about.title || "";
             document.getElementById('aboutParagraph').value = db.about.paragraph || "";
             document.getElementById('aboutQuote').value = db.about.quote || "";
+            document.getElementById('aboutMainImageUrl').value = db.about.mainImageUrl || "";
+            document.getElementById('aboutFoundedYear').value = db.about.foundedYear || 2018;
 
             const chars = db.about.characteristics || [];
             [1, 2, 3].forEach(n => {
@@ -225,6 +227,8 @@ document.addEventListener('DOMContentLoaded', () => {
             db.about.title = document.getElementById('aboutTitle').value;
             db.about.paragraph = document.getElementById('aboutParagraph').value;
             db.about.quote = document.getElementById('aboutQuote').value;
+            db.about.mainImageUrl = document.getElementById('aboutMainImageUrl').value.trim();
+            db.about.foundedYear = parseInt(document.getElementById('aboutFoundedYear').value, 10);
 
             db.about.characteristics = [1, 2, 3].map(n => ({
                 id: (existingChars[n - 1] && existingChars[n - 1].id) || `char-${n}`,

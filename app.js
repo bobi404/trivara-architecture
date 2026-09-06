@@ -89,6 +89,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (paraElem) paraElem.textContent = db.about.paragraph;
                 if (philoElem) philoElem.textContent = `"${db.about.quote}"`;
 
+                const mainImgElem = document.getElementById('aboutMainImage');
+                if (mainImgElem && db.about.mainImageUrl) {
+                    mainImgElem.src = db.about.mainImageUrl;
+                }
+
+                const foundedYearElem = document.getElementById('foundedYearText');
+                if (foundedYearElem && db.about.foundedYear) {
+                    foundedYearElem.textContent = `Sejak Tahun ${db.about.foundedYear}`;
+                }
+
+                const expYearsElem = document.getElementById('experienceYears');
+                if (expYearsElem && db.stats && db.stats.experienceYears) {
+                    expYearsElem.textContent = `${db.stats.experienceYears}+`;
+                }
+
                 if (db.about.characteristics && db.about.characteristics.length > 0) {
                     const accGroup = aboutSection.querySelector('.accordion-group');
                     if (accGroup) {

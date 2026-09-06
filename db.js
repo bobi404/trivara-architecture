@@ -65,6 +65,8 @@ const TRIVARA_DEFAULT_DATA = {
         title: "Dedikasi dalam Menghadirkan Arsitektur Berkelanjutan",
         paragraph: "TRIVARA lahir dari visi untuk mendefinisikan ulang standar arsitektur hunian dan komersial di Indonesia. Kami percaya bahwa desain yang baik adalah kombinasi antara kemurnian bentuk (purity of form), efisiensi ruang, dan integrasi lanskap sekitar.",
         quote: "Kami tidak sekadar menggambar cetak biru, melainkan merajut gaya hidup, pencahayaan alami, dan keindahan struktur menjadi ruang tempat tinggal bermakna.",
+        mainImageUrl: "https://images.unsplash.com/photo-1600585152220-90363fe7e115?auto=format&fit=crop&w=1000&q=85",
+        foundedYear: 2018,
         characteristics: [
             {
                 id: "char-1",
