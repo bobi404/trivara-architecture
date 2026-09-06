@@ -12,6 +12,16 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentSlide = 0;
     let slideInterval;
 
+    // Portfolio grid state — used by renderPortfolioSection(). Declared here
+    // for the same reason as currentSlide/slideInterval above: renderPublicSite()
+    // reads these synchronously before their original declaration line would
+    // otherwise have run.
+    const PORTFOLIO_PER_PAGE = 4;
+    let portfolioAllItems = [];
+    let portfolioFilter = 'all';
+    let portfolioPage = 1;
+    let portfolioFiltersBound = false;
+
     // DYNAMIC RENDER ENGINE FROM DB
     function renderPublicSite() {
         if (typeof DB === 'undefined') return;
@@ -148,35 +158,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 6. Portfolio Showcase
+        // 6. Portfolio Showcase (grid + category filter + pagination)
         if (db.portfolio && db.portfolio.length > 0) {
-            const portfolioGrid = document.getElementById('portfolioGrid');
-            if (portfolioGrid) {
-                portfolioGrid.innerHTML = db.portfolio.map(p => {
-                    const images = getPortfolioImages(p);
-                    const cover = images[0] || '';
-                    return `
-                    <div class="portfolio-card" data-category="${p.category}" data-port-id="${p.id}" data-title="${p.title}" data-sub="${p.subtitle}">
-                        <img src="${cover}" alt="${p.title}" class="port-img">
-                        ${images.length > 1 ? `<span class="port-photo-count"><i class="fa-solid fa-images"></i> ${images.length}</span>` : ''}
-                        <div class="port-overlay">
-                            <span class="port-cat">${p.categoryLabel || p.category}</span>
-                            <h3 class="port-title">${p.title}</h3>
-                            <p class="port-loc"><i class="fa-solid fa-location-dot"></i> ${p.location || ''}</p>
-                            <button class="port-zoom-btn"><i class="fa-solid fa-expand"></i> Lihat Detail Proyek</button>
-                        </div>
-                    </div>
-                `;
-                }).join('');
-                // Lookup used by the lightbox to get the full photo set for
-                // whichever card was clicked (avoids stuffing JSON into a
-                // DOM attribute, which gets messy with quotes in URLs).
-                window._portfolioImagesById = {};
-                db.portfolio.forEach(p => {
-                    window._portfolioImagesById[p.id] = getPortfolioImages(p);
-                });
-                initPortfolioListeners();
-            }
+            portfolioAllItems = db.portfolio;
+            initPortfolioFilters();
+            renderPortfolioSection();
         }
 
         // 7. Pricing & Tariff Estimator — both the calculator radios and the
@@ -422,83 +408,157 @@ document.addEventListener('DOMContentLoaded', () => {
         animateStats();
     }
 
-    // PORTFOLIO FILTER & LIGHTBOX LISTENERS
-    function initPortfolioListeners() {
-        const filterBtns = document.querySelectorAll('.filter-btn');
-        const portfolioCards = document.querySelectorAll('.portfolio-card');
-        const lightboxModal = document.getElementById('lightboxModal');
+    // PORTFOLIO: CATEGORY FILTER (bound once — filter buttons are static HTML,
+    // not regenerated on re-render, so this must not be re-bound every time
+    // or clicks would fire multiple times cumulatively)
+    function initPortfolioFilters() {
+        if (portfolioFiltersBound) return;
+        portfolioFiltersBound = true;
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                portfolioFilter = btn.getAttribute('data-filter');
+                portfolioPage = 1;
+                renderPortfolioSection();
+                document.getElementById('portfolio').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+    }
+
+    // PORTFOLIO: RENDER CURRENT PAGE (grid + pagination controls), called
+    // whenever the data, filter, or page number changes.
+    function renderPortfolioSection() {
+        const portfolioGrid = document.getElementById('portfolioGrid');
+        const paginationEl = document.getElementById('portfolioPagination');
+        if (!portfolioGrid) return;
+
+        const filtered = portfolioFilter === 'all'
+            ? portfolioAllItems
+            : portfolioAllItems.filter(p => p.category === portfolioFilter);
+
+        const totalPages = Math.max(1, Math.ceil(filtered.length / PORTFOLIO_PER_PAGE));
+        if (portfolioPage > totalPages) portfolioPage = totalPages;
+        if (portfolioPage < 1) portfolioPage = 1;
+
+        const startIdx = (portfolioPage - 1) * PORTFOLIO_PER_PAGE;
+        const pageItems = filtered.slice(startIdx, startIdx + PORTFOLIO_PER_PAGE);
+
+        portfolioGrid.innerHTML = pageItems.map(p => {
+            const images = getPortfolioImages(p);
+            const cover = images[0] || '';
+            return `
+                <div class="portfolio-card" data-category="${p.category}" data-port-id="${p.id}" data-title="${p.title}" data-sub="${p.subtitle}">
+                    <img src="${cover}" alt="${p.title}" class="port-img">
+                    ${images.length > 1 ? `<span class="port-photo-count"><i class="fa-solid fa-images"></i> ${images.length}</span>` : ''}
+                    <div class="port-overlay">
+                        <span class="port-cat">${p.categoryLabel || p.category}</span>
+                        <h3 class="port-title">${p.title}</h3>
+                        <p class="port-loc"><i class="fa-solid fa-location-dot"></i> ${p.location || ''}</p>
+                        <button class="port-zoom-btn"><i class="fa-solid fa-expand"></i> Lihat Detail Proyek</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Lookup used by the lightbox to get the full photo set for whichever
+        // card is clicked (avoids stuffing JSON into a DOM attribute, which
+        // gets messy with quotes in URLs). Built from the FULL dataset so it
+        // stays valid regardless of which page/filter is currently shown.
+        window._portfolioImagesById = {};
+        portfolioAllItems.forEach(p => {
+            window._portfolioImagesById[p.id] = getPortfolioImages(p);
+        });
+
+        // Pagination controls
+        if (paginationEl) {
+            if (totalPages <= 1) {
+                paginationEl.innerHTML = '';
+            } else {
+                let html = `<button class="page-nav-btn" id="portPagePrev" ${portfolioPage === 1 ? 'disabled' : ''} aria-label="Halaman sebelumnya"><i class="fa-solid fa-chevron-left"></i></button>`;
+                for (let i = 1; i <= totalPages; i++) {
+                    html += `<button class="page-num-btn ${i === portfolioPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+                }
+                html += `<button class="page-nav-btn" id="portPageNext" ${portfolioPage === totalPages ? 'disabled' : ''} aria-label="Halaman berikutnya"><i class="fa-solid fa-chevron-right"></i></button>`;
+                paginationEl.innerHTML = html;
+
+                const goTo = (page) => {
+                    portfolioPage = page;
+                    renderPortfolioSection();
+                    document.getElementById('portfolio').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                };
+
+                const prevBtn = document.getElementById('portPagePrev');
+                const nextBtn = document.getElementById('portPageNext');
+                if (prevBtn) prevBtn.addEventListener('click', () => goTo(portfolioPage - 1));
+                if (nextBtn) nextBtn.addEventListener('click', () => goTo(portfolioPage + 1));
+                paginationEl.querySelectorAll('.page-num-btn').forEach(btn => {
+                    btn.addEventListener('click', () => goTo(parseInt(btn.getAttribute('data-page'), 10)));
+                });
+            }
+        }
+
+        attachPortfolioCardListeners();
+    }
+
+    // PORTFOLIO: LIGHTBOX GALLERY — modal chrome (close/backdrop/prev/next/
+    // thumbs/keyboard) is bound ONCE since those elements are static. Card
+    // click listeners are (re)bound every render since cards are regenerated
+    // each time the page/filter changes.
+    let portfolioLightboxBound = false;
+    let galleryImages = [];
+    let galleryIndex = 0;
+
+    function renderGalleryFrame() {
         const lightboxImg = document.getElementById('lightboxImg');
-        const lightboxTitle = document.getElementById('lightboxTitle');
-        const lightboxSub = document.getElementById('lightboxSub');
+        const lightboxCounter = document.getElementById('lightboxCounter');
+        const lightboxPrev = document.getElementById('lightboxPrev');
+        const lightboxNext = document.getElementById('lightboxNext');
+        const lightboxThumbs = document.getElementById('lightboxThumbs');
+
+        if (!lightboxImg || galleryImages.length === 0) return;
+        lightboxImg.src = galleryImages[galleryIndex];
+
+        if (lightboxCounter) {
+            lightboxCounter.textContent = galleryImages.length > 1
+                ? `${galleryIndex + 1} / ${galleryImages.length}`
+                : '';
+        }
+
+        const hasMultiple = galleryImages.length > 1;
+        if (lightboxPrev) lightboxPrev.style.display = hasMultiple ? 'flex' : 'none';
+        if (lightboxNext) lightboxNext.style.display = hasMultiple ? 'flex' : 'none';
+
+        if (lightboxThumbs) {
+            if (hasMultiple) {
+                lightboxThumbs.innerHTML = galleryImages.map((src, idx) => `
+                    <img src="${src}" class="lightbox-thumb ${idx === galleryIndex ? 'active' : ''}" data-idx="${idx}" alt="Foto ${idx + 1}">
+                `).join('');
+                lightboxThumbs.style.display = 'flex';
+            } else {
+                lightboxThumbs.innerHTML = '';
+                lightboxThumbs.style.display = 'none';
+            }
+        }
+    }
+
+    function goToGalleryIndex(idx) {
+        if (galleryImages.length === 0) return;
+        galleryIndex = (idx + galleryImages.length) % galleryImages.length;
+        renderGalleryFrame();
+    }
+
+    function initPortfolioLightboxChrome() {
+        if (portfolioLightboxBound) return;
+        portfolioLightboxBound = true;
+
+        const lightboxModal = document.getElementById('lightboxModal');
         const lightboxClose = document.getElementById('lightboxClose');
         const lightboxBackdrop = document.querySelector('.lightbox-backdrop');
         const lightboxPrev = document.getElementById('lightboxPrev');
         const lightboxNext = document.getElementById('lightboxNext');
         const lightboxThumbs = document.getElementById('lightboxThumbs');
-        const lightboxCounter = document.getElementById('lightboxCounter');
-
-        filterBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                filterBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-
-                const filter = btn.getAttribute('data-filter');
-
-                portfolioCards.forEach(card => {
-                    const category = card.getAttribute('data-category');
-                    if (filter === 'all' || category === filter) {
-                        card.style.display = 'block';
-                        setTimeout(() => {
-                            card.style.opacity = '1';
-                            card.style.transform = 'scale(1)';
-                        }, 50);
-                    } else {
-                        card.style.opacity = '0';
-                        card.style.transform = 'scale(0.95)';
-                        setTimeout(() => {
-                            card.style.display = 'none';
-                        }, 300);
-                    }
-                });
-            });
-        });
-
-        // Gallery state for whichever project is currently open in the lightbox
-        let galleryImages = [];
-        let galleryIndex = 0;
-
-        function renderGalleryFrame() {
-            if (!lightboxImg || galleryImages.length === 0) return;
-            lightboxImg.src = galleryImages[galleryIndex];
-
-            if (lightboxCounter) {
-                lightboxCounter.textContent = galleryImages.length > 1
-                    ? `${galleryIndex + 1} / ${galleryImages.length}`
-                    : '';
-            }
-
-            const hasMultiple = galleryImages.length > 1;
-            if (lightboxPrev) lightboxPrev.style.display = hasMultiple ? 'flex' : 'none';
-            if (lightboxNext) lightboxNext.style.display = hasMultiple ? 'flex' : 'none';
-
-            if (lightboxThumbs) {
-                if (hasMultiple) {
-                    lightboxThumbs.innerHTML = galleryImages.map((src, idx) => `
-                        <img src="${src}" class="lightbox-thumb ${idx === galleryIndex ? 'active' : ''}" data-idx="${idx}" alt="Foto ${idx + 1}">
-                    `).join('');
-                    lightboxThumbs.style.display = 'flex';
-                } else {
-                    lightboxThumbs.innerHTML = '';
-                    lightboxThumbs.style.display = 'none';
-                }
-            }
-        }
-
-        function goToGalleryIndex(idx) {
-            if (galleryImages.length === 0) return;
-            galleryIndex = (idx + galleryImages.length) % galleryImages.length;
-            renderGalleryFrame();
-        }
 
         if (lightboxThumbs) {
             lightboxThumbs.addEventListener('click', (e) => {
@@ -506,7 +566,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (thumb) goToGalleryIndex(parseInt(thumb.getAttribute('data-idx'), 10));
             });
         }
-
         if (lightboxPrev) lightboxPrev.addEventListener('click', () => goToGalleryIndex(galleryIndex - 1));
         if (lightboxNext) lightboxNext.addEventListener('click', () => goToGalleryIndex(galleryIndex + 1));
 
@@ -517,7 +576,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Escape') lightboxModal.classList.remove('active');
         });
 
-        portfolioCards.forEach(card => {
+        if (lightboxClose) lightboxClose.addEventListener('click', () => lightboxModal.classList.remove('active'));
+        if (lightboxBackdrop) lightboxBackdrop.addEventListener('click', () => lightboxModal.classList.remove('active'));
+    }
+
+    function attachPortfolioCardListeners() {
+        initPortfolioLightboxChrome();
+
+        const lightboxModal = document.getElementById('lightboxModal');
+        const lightboxTitle = document.getElementById('lightboxTitle');
+        const lightboxSub = document.getElementById('lightboxSub');
+
+        document.querySelectorAll('.portfolio-card').forEach(card => {
             card.addEventListener('click', () => {
                 const portId = card.getAttribute('data-port-id');
                 const title = card.getAttribute('data-title');
@@ -534,9 +604,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-
-        if (lightboxClose) lightboxClose.addEventListener('click', () => lightboxModal.classList.remove('active'));
-        if (lightboxBackdrop) lightboxBackdrop.addEventListener('click', () => lightboxModal.classList.remove('active'));
     }
 
     // ACCORDION HANDLERS
