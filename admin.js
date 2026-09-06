@@ -150,15 +150,22 @@ document.addEventListener('DOMContentLoaded', () => {
         renderPortfolioTable(db.portfolio || []);
 
         // F. Tab Pricing
-        if (db.pricing) {
-            document.getElementById('rateBasic').value = db.pricing.rates?.basic || 75000;
-            document.getElementById('rateComplete').value = db.pricing.rates?.complete || 135000;
-            document.getElementById('rateTurnkey').value = db.pricing.rates?.turnkey || 210000;
-
-            document.getElementById('pkgTitle').value = db.pricing.packageTitle || "";
-            document.getElementById('pkgBadge').value = db.pricing.packageBadge || "";
-            document.getElementById('pkgDesc').value = db.pricing.packageDesc || "";
-            document.getElementById('pkgFeatures').value = (db.pricing.features || []).join('\n');
+        if (db.pricing && Array.isArray(db.pricing.packages)) {
+            const [pkg1, pkg2] = db.pricing.packages;
+            if (pkg1) {
+                document.getElementById('pkg1Title').value = pkg1.title || "";
+                document.getElementById('pkg1Rate').value = pkg1.rate || 65000;
+                document.getElementById('pkg1Badge').value = pkg1.badge || "";
+                document.getElementById('pkg1Desc').value = pkg1.description || "";
+                document.getElementById('pkg1Features').value = (pkg1.features || []).join('\n');
+            }
+            if (pkg2) {
+                document.getElementById('pkg2Title').value = pkg2.title || "";
+                document.getElementById('pkg2Rate').value = pkg2.rate || 110000;
+                document.getElementById('pkg2Badge').value = pkg2.badge || "";
+                document.getElementById('pkg2Desc').value = pkg2.description || "";
+                document.getElementById('pkg2Features').value = (pkg2.features || []).join('\n');
+            }
         }
 
         // G. Tab Contact
@@ -224,15 +231,28 @@ document.addEventListener('DOMContentLoaded', () => {
         formPricing.addEventListener('submit', (e) => {
             e.preventDefault();
             const db = DB.get();
-            db.pricing.rates = {
-                basic: parseInt(document.getElementById('rateBasic').value, 10),
-                complete: parseInt(document.getElementById('rateComplete').value, 10),
-                turnkey: parseInt(document.getElementById('rateTurnkey').value, 10)
+            const existing = (db.pricing && Array.isArray(db.pricing.packages)) ? db.pricing.packages : [];
+
+            db.pricing = {
+                packages: [
+                    {
+                        id: (existing[0] && existing[0].id) || 'pkg1',
+                        title: document.getElementById('pkg1Title').value,
+                        rate: parseInt(document.getElementById('pkg1Rate').value, 10),
+                        badge: document.getElementById('pkg1Badge').value.trim(),
+                        description: document.getElementById('pkg1Desc').value,
+                        features: document.getElementById('pkg1Features').value.split('\n').map(f => f.trim()).filter(f => f)
+                    },
+                    {
+                        id: (existing[1] && existing[1].id) || 'pkg2',
+                        title: document.getElementById('pkg2Title').value,
+                        rate: parseInt(document.getElementById('pkg2Rate').value, 10),
+                        badge: document.getElementById('pkg2Badge').value.trim(),
+                        description: document.getElementById('pkg2Desc').value,
+                        features: document.getElementById('pkg2Features').value.split('\n').map(f => f.trim()).filter(f => f)
+                    }
+                ]
             };
-            db.pricing.packageTitle = document.getElementById('pkgTitle').value;
-            db.pricing.packageBadge = document.getElementById('pkgBadge').value;
-            db.pricing.packageDesc = document.getElementById('pkgDesc').value;
-            db.pricing.features = document.getElementById('pkgFeatures').value.split('\n').map(f => f.trim()).filter(f => f);
 
             DB.set(db);
             showToast('Tarif & Paket Estimator berhasil disimpan!');

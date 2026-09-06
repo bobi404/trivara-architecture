@@ -1010,6 +1010,12 @@ body.light-theme .hero-stats-bar {
     padding: 2.5rem;
 }
 
+.packages-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
 .calc-header {
     display: flex;
     align-items: center;

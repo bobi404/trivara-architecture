@@ -323,47 +323,65 @@
             <!-- TAB 6: TARIF & ESTIMATOR -->
             <section class="tab-content" id="tabPricing">
                 <div class="admin-card glass-card">
-                    <h3 class="card-section-title">Pengaturan Tarif Kalkulator Estimasi</h3>
+                    <h3 class="card-section-title">Pengaturan Paket & Tarif Kalkulator Estimasi</h3>
+                    <p
+                        style="color: var(--text-secondary); font-size: 0.9rem; margin-top: -1rem; margin-bottom: 1.5rem;">
+                        Kalkulator biaya di website publik menampilkan PERSIS 2 paket ini — ubah di sini akan langsung
+                        mengubah kalkulator & kartu ringkasan di halaman utama.
+                    </p>
                     <form id="formPricing" class="admin-form">
+                        <h4 class="sub-form-title">Paket 1</h4>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="rateBasic">Tarif Paket Konseptual (Rp/m²)</label>
-                                <input type="number" id="rateBasic" class="form-control" step="5000" required>
+                                <label for="pkg1Title">Judul Paket</label>
+                                <input type="text" id="pkg1Title" class="form-control" required>
                             </div>
                             <div class="form-group">
-                                <label for="rateComplete">Tarif Paket Eksklusif 3D + DED (Rp/m²)</label>
-                                <input type="number" id="rateComplete" class="form-control" step="5000" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="rateTurnkey">Tarif Paket Turnkey & RAB (Rp/m²)</label>
-                                <input type="number" id="rateTurnkey" class="form-control" step="5000" required>
+                                <label for="pkg1Rate">Tarif (Rp/m²)</label>
+                                <input type="number" id="pkg1Rate" class="form-control" step="5000" required>
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label for="pkg1Badge">Badge (opsional, kosongkan jika tidak perlu — misal
+                                "POPULER")</label>
+                            <input type="text" id="pkg1Badge" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="pkg1Desc">Deskripsi Singkat</label>
+                            <textarea id="pkg1Desc" rows="2" class="form-control" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="pkg1Features">Daftar Fitur (satu per baris)</label>
+                            <textarea id="pkg1Features" rows="6" class="form-control" required></textarea>
+                        </div>
 
-                        <h4 class="sub-form-title">Rincian Paket Highlight</h4>
+                        <h4 class="sub-form-title">Paket 2</h4>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="pkgTitle">Judul Paket</label>
-                                <input type="text" id="pkgTitle" class="form-control" required>
+                                <label for="pkg2Title">Judul Paket</label>
+                                <input type="text" id="pkg2Title" class="form-control" required>
                             </div>
                             <div class="form-group">
-                                <label for="pkgBadge">Badge Paket</label>
-                                <input type="text" id="pkgBadge" class="form-control" required>
+                                <label for="pkg2Rate">Tarif (Rp/m²)</label>
+                                <input type="number" id="pkg2Rate" class="form-control" step="5000" required>
                             </div>
                         </div>
-
                         <div class="form-group">
-                            <label for="pkgDesc">Deskripsi Singkat Paket</label>
-                            <textarea id="pkgDesc" rows="3" class="form-control" required></textarea>
+                            <label for="pkg2Badge">Badge (opsional, kosongkan jika tidak perlu — misal
+                                "POPULER")</label>
+                            <input type="text" id="pkg2Badge" class="form-control">
                         </div>
-
                         <div class="form-group">
-                            <label for="pkgFeatures">Daftar Fitur Paket (Pisahkan dengan baris baru / Enter)</label>
-                            <textarea id="pkgFeatures" rows="5" class="form-control" required></textarea>
+                            <label for="pkg2Desc">Deskripsi Singkat</label>
+                            <textarea id="pkg2Desc" rows="2" class="form-control" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="pkg2Features">Daftar Fitur (satu per baris)</label>
+                            <textarea id="pkg2Features" rows="6" class="form-control" required></textarea>
                         </div>
 
                         <button type="submit" class="btn btn-primary">
-                            <i class="fa-solid fa-floppy-disk"></i> Simpan Tarif Estimator
+                            <i class="fa-solid fa-floppy-disk"></i> Simpan Paket & Tarif
                         </button>
                     </form>
                 </div>

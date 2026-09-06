@@ -162,22 +162,43 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 7. Pricing & Tariff Estimator
-        if (db.pricing) {
-            const pkgCard = document.querySelector('.package-card');
-            if (pkgCard) {
-                const titleEl = pkgCard.querySelector('.pkg-title');
-                const badgeEl = pkgCard.querySelector('.pkg-badge');
-                const priceEl = pkgCard.querySelector('.pkg-price');
-                const descEl = pkgCard.querySelector('.pkg-desc');
-                const featEl = pkgCard.querySelector('.pkg-features');
+        // 7. Pricing & Tariff Estimator — both the calculator radios and the
+        // summary cards are generated from db.pricing.packages, so editing
+        // packages in the admin panel actually changes what's shown here.
+        if (db.pricing && Array.isArray(db.pricing.packages)) {
+            const packages = db.pricing.packages;
 
-                if (titleEl) titleEl.textContent = db.pricing.packageTitle;
-                if (badgeEl) badgeEl.textContent = db.pricing.packageBadge;
-                if (priceEl) priceEl.innerHTML = `${db.pricing.packagePriceLabel || 'Rp 135k'} <span>${db.pricing.packagePriceSub || '/ m²'}</span>`;
-                if (descEl) descEl.textContent = db.pricing.packageDesc;
-                if (featEl) featEl.innerHTML = (db.pricing.features || []).map(f => `<li><i class="fa-solid fa-check text-accent"></i> ${f}</li>`).join('');
+            const packageOptionsContainer = document.querySelector('.package-options');
+            if (packageOptionsContainer) {
+                packageOptionsContainer.innerHTML = packages.map((pkg, idx) => `
+                    <label class="package-radio ${idx === 0 ? 'active' : ''}">
+                        <input type="radio" name="packageType" value="${pkg.id}" ${idx === 0 ? 'checked' : ''}>
+                        <div class="radio-content">
+                            <strong>${pkg.title}</strong>
+                            <span>Rp ${new Intl.NumberFormat('id-ID').format(pkg.rate)} / m²</span>
+                        </div>
+                    </label>
+                `).join('');
             }
+
+            const packagesSummaryContainer = document.querySelector('.packages-summary');
+            if (packagesSummaryContainer) {
+                packagesSummaryContainer.innerHTML = packages.map(pkg => `
+                    <div class="package-card glass-card">
+                        ${pkg.badge ? `<span class="pkg-badge">${pkg.badge}</span>` : ''}
+                        <h3 class="pkg-title">${pkg.title}</h3>
+                        <div class="pkg-price">Rp ${Math.round(pkg.rate / 1000)}k <span>/ m²</span></div>
+                        <p class="pkg-desc">${pkg.description || ''}</p>
+                        <ul class="pkg-features">
+                            ${(pkg.features || []).map(f => `<li><i class="fa-solid fa-check text-accent"></i> ${f}</li>`).join('')}
+                        </ul>
+                    </div>
+                `).join('');
+            }
+
+            // Radios are freshly created above, so (re)bind their listeners
+            // every time — see the function defined near the calculator setup.
+            if (typeof setupPackageRadios === 'function') setupPackageRadios();
             updatePriceEstimate();
         }
 
@@ -514,20 +535,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const buildingAreaInput = document.getElementById('buildingArea');
     const areaValueDisplay = document.getElementById('areaValue');
     const totalEstimateDisplay = document.getElementById('totalEstimate');
-    const packageRadios = document.querySelectorAll('input[name="packageType"]');
-    const packageRadioLabels = document.querySelectorAll('.package-radio');
 
     function updatePriceEstimate() {
         if (!buildingAreaInput) return;
         const db = typeof DB !== 'undefined' ? DB.get() : null;
-        const rates = db?.pricing?.rates || { basic: 75000, complete: 135000, turnkey: 210000 };
+        const packages = (db && db.pricing && Array.isArray(db.pricing.packages)) ? db.pricing.packages : [];
 
         const area = parseInt(buildingAreaInput.value, 10);
-        let selectedRate = rates.complete;
+        let selectedRate = packages[0] ? packages[0].rate : 65000;
 
-        packageRadios.forEach(radio => {
+        document.querySelectorAll('input[name="packageType"]').forEach(radio => {
             if (radio.checked) {
-                selectedRate = rates[radio.value] || rates.complete;
+                const match = packages.find(p => p.id === radio.value);
+                if (match) selectedRate = match.rate;
             }
         });
 
@@ -546,8 +566,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    if (buildingAreaInput) {
-        buildingAreaInput.addEventListener('input', updatePriceEstimate);
+    // The package radios are rebuilt from scratch on every render (see
+    // section 7 of renderPublicSite), so their listeners need to be
+    // re-attached each time rather than bound once here.
+    function setupPackageRadios() {
+        const packageRadios = document.querySelectorAll('input[name="packageType"]');
+        const packageRadioLabels = document.querySelectorAll('.package-radio');
         packageRadios.forEach(radio => {
             radio.addEventListener('change', () => {
                 packageRadioLabels.forEach(label => label.classList.remove('active'));
@@ -555,7 +579,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 updatePriceEstimate();
             });
         });
-        updatePriceEstimate();
+    }
+
+    if (buildingAreaInput) {
+        buildingAreaInput.addEventListener('input', updatePriceEstimate);
     }
 
     // CONTACT FORM & WHATSAPP / INBOX STORE HANDLER

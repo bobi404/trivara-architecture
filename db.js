@@ -165,23 +165,37 @@ const TRIVARA_DEFAULT_DATA = {
         }
     ],
     pricing: {
-        rates: {
-            basic: 75000,
-            complete: 135000,
-            turnkey: 210000
-        },
-        packageTitle: "Paket Eksklusif 3D + DED",
-        packageBadge: "POPULER",
-        packagePriceLabel: "Rp 135k",
-        packagePriceSub: "/ m²",
-        packageDesc: "Sangat cocok untuk pembangunan rumah tinggal pribadi modern yang membutuhkan ketelitian gambar kerja teknis.",
-        features: [
-            "Konsep Denah Layout 2D",
-            "3D Render Photorealistic Exterior",
-            "Gambar Kerja Arsitektur (DED Lengkap)",
-            "Rencana MEP (Listrik, Air & Sanitasi)",
-            "Revisi hingga 3x Tahapan",
-            "Konsultasi Langsung Arsitek"
+        packages: [
+            {
+                id: "essential",
+                title: "TRIVARA Essential",
+                rate: 65000,
+                badge: "",
+                description: "Cocok untuk gambaran awal desain rumah dengan visualisasi 3D yang jelas sebelum masuk tahap konstruksi.",
+                features: [
+                    "Denah",
+                    "3D Design",
+                    "Rendering (3D Visualisasi)",
+                    "Soft & Hard File",
+                    "Free Revisi 5x (Minor)"
+                ]
+            },
+            {
+                id: "complete",
+                title: "TRIVARA Complete",
+                rate: 110000,
+                badge: "POPULER",
+                description: "Paket paling lengkap untuk pembangunan rumah tinggal, sudah termasuk gambar kerja teknis & animasi 3D.",
+                features: [
+                    "Denah",
+                    "DED (Gambar Kerja Lengkap)",
+                    "3D Design",
+                    "Rendering (3D Visualisasi)",
+                    "Animasi 3D Visualisasi",
+                    "Soft & Hard File",
+                    "Free Revisi 5x (Minor)"
+                ]
+            }
         ]
     },
     contact: {
