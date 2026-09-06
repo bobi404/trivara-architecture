@@ -133,9 +133,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // C. Tab About & Stats
         if (db.about && db.stats) {
+            document.getElementById('aboutSubtitle').value = db.about.subtitle || "";
             document.getElementById('aboutTitle').value = db.about.title || "";
             document.getElementById('aboutParagraph').value = db.about.paragraph || "";
             document.getElementById('aboutQuote').value = db.about.quote || "";
+
+            const chars = db.about.characteristics || [];
+            [1, 2, 3].forEach(n => {
+                const c = chars[n - 1];
+                document.getElementById(`char${n}Icon`).value = c ? c.icon || "" : "";
+                document.getElementById(`char${n}Title`).value = c ? c.title || "" : "";
+                document.getElementById(`char${n}Content`).value = c ? c.content || "" : "";
+            });
 
             document.getElementById('statYears').value = db.stats.experienceYears || 8;
             document.getElementById('statProjects').value = db.stats.completedProjects || 145;
@@ -176,8 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('contactEmails').value = db.contact.emails || "";
             document.getElementById('contactWorkingHours').value = db.contact.workingHours || "";
             document.getElementById('socialInstagram').value = db.contact.instagram || "";
-            document.getElementById('socialYoutube').value = db.contact.youtube || "";
-            document.getElementById('socialLinkedin').value = db.contact.linkedin || "";
+            document.getElementById('socialTiktok').value = db.contact.tiktok || "";
         }
 
         // H. Tab Inquiries Table
@@ -211,9 +219,19 @@ document.addEventListener('DOMContentLoaded', () => {
         formAbout.addEventListener('submit', (e) => {
             e.preventDefault();
             const db = DB.get();
+            const existingChars = db.about.characteristics || [];
+
+            db.about.subtitle = document.getElementById('aboutSubtitle').value;
             db.about.title = document.getElementById('aboutTitle').value;
             db.about.paragraph = document.getElementById('aboutParagraph').value;
             db.about.quote = document.getElementById('aboutQuote').value;
+
+            db.about.characteristics = [1, 2, 3].map(n => ({
+                id: (existingChars[n - 1] && existingChars[n - 1].id) || `char-${n}`,
+                icon: document.getElementById(`char${n}Icon`).value.trim(),
+                title: document.getElementById(`char${n}Title`).value,
+                content: document.getElementById(`char${n}Content`).value
+            }));
 
             db.stats.experienceYears = parseInt(document.getElementById('statYears').value, 10);
             db.stats.completedProjects = parseInt(document.getElementById('statProjects').value, 10);
@@ -272,8 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 emails: document.getElementById('contactEmails').value,
                 workingHours: document.getElementById('contactWorkingHours').value,
                 instagram: document.getElementById('socialInstagram').value,
-                youtube: document.getElementById('socialYoutube').value,
-                linkedin: document.getElementById('socialLinkedin').value
+                tiktok: document.getElementById('socialTiktok').value
             };
             DB.set(db);
             showToast('Informasi Kontak & Sosmed berhasil disimpan!');

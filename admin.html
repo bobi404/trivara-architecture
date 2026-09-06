@@ -223,6 +223,12 @@
                     <h3 class="card-section-title">Profil & Angka Statistik Studio</h3>
                     <form id="formAbout" class="admin-form">
                         <div class="form-group">
+                            <label for="aboutSubtitle">Label Kecil di Atas Judul (Subtitle)</label>
+                            <input type="text" id="aboutSubtitle" class="form-control"
+                                placeholder="TENTANG TRIVARA STUDIO" required>
+                        </div>
+
+                        <div class="form-group">
                             <label for="aboutTitle">Judul Seksi Tentang Kami</label>
                             <input type="text" id="aboutTitle" class="form-control" required>
                         </div>
@@ -235,6 +241,61 @@
                         <div class="form-group">
                             <label for="aboutQuote">Kuotasi Filosofi Studio</label>
                             <textarea id="aboutQuote" rows="3" class="form-control" required></textarea>
+                        </div>
+
+                        <h4 class="sub-form-title">Karakteristik Kunci #1</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="char1Icon">Ikon (nama class Font Awesome, contoh: fa-shield-halved)</label>
+                                <input type="text" id="char1Icon" class="form-control" placeholder="fa-shield-halved"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label for="char1Title">Judul</label>
+                                <input type="text" id="char1Title" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="char1Content">Isi / Deskripsi</label>
+                            <textarea id="char1Content" rows="2" class="form-control" required></textarea>
+                        </div>
+
+                        <h4 class="sub-form-title">Karakteristik Kunci #2</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="char2Icon">Ikon (nama class Font Awesome, contoh: fa-award)</label>
+                                <input type="text" id="char2Icon" class="form-control" placeholder="fa-award" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="char2Title">Judul</label>
+                                <input type="text" id="char2Title" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="char2Content">Isi / Deskripsi</label>
+                            <textarea id="char2Content" rows="2" class="form-control" required></textarea>
+                        </div>
+
+                        <h4 class="sub-form-title">Karakteristik Kunci #3</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="char3Icon">Ikon (nama class Font Awesome, contoh: fa-handshake)</label>
+                                <input type="text" id="char3Icon" class="form-control" placeholder="fa-handshake"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label for="char3Title">Judul</label>
+                                <input type="text" id="char3Title" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="char3Content">Isi / Deskripsi</label>
+                            <textarea id="char3Content" rows="2" class="form-control" required></textarea>
+                            <small style="color: var(--text-muted); display: block; margin-top: 0.4rem;">
+                                Cari nama ikon di <a href="https://fontawesome.com/search?ip=classic&ic=free"
+                                    target="_blank" style="color: var(--accent-gold);">fontawesome.com</a> (pakai style
+                                "Solid"), copy nama class tanpa "fa-solid ", contoh cukup "fa-shield-halved".
+                            </small>
                         </div>
 
                         <h4 class="sub-form-title">Angka Statistik Pencapaian</h4>
@@ -424,15 +485,18 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="socialInstagram">URL Instagram</label>
-                                <input type="url" id="socialInstagram" class="form-control">
+                                <input type="url" id="socialInstagram" class="form-control"
+                                    placeholder="https://instagram.com/trivara.design">
                             </div>
                             <div class="form-group">
-                                <label for="socialYoutube">URL YouTube</label>
-                                <input type="url" id="socialYoutube" class="form-control">
+                                <label for="socialTiktok">URL TikTok</label>
+                                <input type="url" id="socialTiktok" class="form-control"
+                                    placeholder="https://tiktok.com/@trivara.design">
                             </div>
                             <div class="form-group">
-                                <label for="socialLinkedin">URL LinkedIn</label>
-                                <input type="url" id="socialLinkedin" class="form-control">
+                                <label for="contactWaNumber">Nomor WhatsApp (format 62xxx, tanpa +/spasi)</label>
+                                <input type="text" id="contactWaNumber" class="form-control"
+                                    placeholder="6281288997700">
                             </div>
                         </div>
 

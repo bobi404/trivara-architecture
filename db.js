@@ -205,8 +205,7 @@ const TRIVARA_DEFAULT_DATA = {
         workingHours: "Senin – Sabtu: 08:30 – 17:30 WIB",
         waNumber: "6281288997700",
         instagram: "https://instagram.com",
-        youtube: "https://youtube.com",
-        linkedin: "https://linkedin.com"
+        tiktok: "https://tiktok.com"
     },
     inquiries: [
         {

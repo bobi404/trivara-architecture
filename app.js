@@ -80,9 +80,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (db.about) {
             const aboutSection = document.querySelector('.about-section');
             if (aboutSection) {
+                const subtitleElem = aboutSection.querySelector('.section-subtitle');
                 const titleElem = aboutSection.querySelector('.section-title');
                 const paraElem = aboutSection.querySelector('.about-paragraph');
                 const philoElem = aboutSection.querySelector('.philo-text');
+                if (subtitleElem) subtitleElem.textContent = db.about.subtitle;
                 if (titleElem) titleElem.textContent = db.about.title;
                 if (paraElem) paraElem.textContent = db.about.paragraph;
                 if (philoElem) philoElem.textContent = `"${db.about.quote}"`;
@@ -202,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updatePriceEstimate();
         }
 
-        // 8. Contact Info
+        // 8. Contact Info & Social Links
         if (db.contact) {
             const contactItems = document.querySelectorAll('.contact-item');
             if (contactItems.length >= 4) {
@@ -214,6 +216,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const waBtn = document.querySelector('.social-btn.wa-btn');
             if (waBtn && db.contact.waNumber) {
                 waBtn.href = `https://wa.me/${db.contact.waNumber}`;
+            }
+            const igBtn = document.getElementById('socialInstagramBtn');
+            if (igBtn && db.contact.instagram) {
+                igBtn.href = db.contact.instagram;
+            }
+            const ttBtn = document.getElementById('socialTiktokBtn');
+            if (ttBtn && db.contact.tiktok) {
+                ttBtn.href = db.contact.tiktok;
             }
         }
     }
