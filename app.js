@@ -125,9 +125,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (db.portfolio && db.portfolio.length > 0) {
             const portfolioGrid = document.getElementById('portfolioGrid');
             if (portfolioGrid) {
-                portfolioGrid.innerHTML = db.portfolio.map(p => `
-                    <div class="portfolio-card" data-category="${p.category}" data-img="${p.image}" data-title="${p.title}" data-sub="${p.subtitle}">
-                        <img src="${p.image}" alt="${p.title}" class="port-img">
+                portfolioGrid.innerHTML = db.portfolio.map(p => {
+                    const images = getPortfolioImages(p);
+                    const cover = images[0] || '';
+                    return `
+                    <div class="portfolio-card" data-category="${p.category}" data-port-id="${p.id}" data-title="${p.title}" data-sub="${p.subtitle}">
+                        <img src="${cover}" alt="${p.title}" class="port-img">
+                        ${images.length > 1 ? `<span class="port-photo-count"><i class="fa-solid fa-images"></i> ${images.length}</span>` : ''}
                         <div class="port-overlay">
                             <span class="port-cat">${p.categoryLabel || p.category}</span>
                             <h3 class="port-title">${p.title}</h3>
@@ -135,7 +139,15 @@ document.addEventListener('DOMContentLoaded', () => {
                             <button class="port-zoom-btn"><i class="fa-solid fa-expand"></i> Lihat Detail Proyek</button>
                         </div>
                     </div>
-                `).join('');
+                `;
+                }).join('');
+                // Lookup used by the lightbox to get the full photo set for
+                // whichever card was clicked (avoids stuffing JSON into a
+                // DOM attribute, which gets messy with quotes in URLs).
+                window._portfolioImagesById = {};
+                db.portfolio.forEach(p => {
+                    window._portfolioImagesById[p.id] = getPortfolioImages(p);
+                });
                 initPortfolioListeners();
             }
         }
@@ -187,7 +199,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    renderPublicSite();
+    // NOTE: the initial call to renderPublicSite() happens at the very end of
+    // this file (not here) — it synchronously triggers code (hero slider,
+    // pricing calculator, portfolio listeners, etc.) that reads variables
+    // declared further down in this same function. Calling it here, before
+    // those declarations run, caused "Cannot access ... before
+    // initialization" errors that silently aborted the rest of this script.
 
     // 1. Header Navigation, Mobile Toggle, & Dynamic ScrollSpy
     const header = document.getElementById('header');
@@ -359,6 +376,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const lightboxSub = document.getElementById('lightboxSub');
         const lightboxClose = document.getElementById('lightboxClose');
         const lightboxBackdrop = document.querySelector('.lightbox-backdrop');
+        const lightboxPrev = document.getElementById('lightboxPrev');
+        const lightboxNext = document.getElementById('lightboxNext');
+        const lightboxThumbs = document.getElementById('lightboxThumbs');
+        const lightboxCounter = document.getElementById('lightboxCounter');
 
         filterBtns.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -386,16 +407,73 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
+        // Gallery state for whichever project is currently open in the lightbox
+        let galleryImages = [];
+        let galleryIndex = 0;
+
+        function renderGalleryFrame() {
+            if (!lightboxImg || galleryImages.length === 0) return;
+            lightboxImg.src = galleryImages[galleryIndex];
+
+            if (lightboxCounter) {
+                lightboxCounter.textContent = galleryImages.length > 1
+                    ? `${galleryIndex + 1} / ${galleryImages.length}`
+                    : '';
+            }
+
+            const hasMultiple = galleryImages.length > 1;
+            if (lightboxPrev) lightboxPrev.style.display = hasMultiple ? 'flex' : 'none';
+            if (lightboxNext) lightboxNext.style.display = hasMultiple ? 'flex' : 'none';
+
+            if (lightboxThumbs) {
+                if (hasMultiple) {
+                    lightboxThumbs.innerHTML = galleryImages.map((src, idx) => `
+                        <img src="${src}" class="lightbox-thumb ${idx === galleryIndex ? 'active' : ''}" data-idx="${idx}" alt="Foto ${idx + 1}">
+                    `).join('');
+                    lightboxThumbs.style.display = 'flex';
+                } else {
+                    lightboxThumbs.innerHTML = '';
+                    lightboxThumbs.style.display = 'none';
+                }
+            }
+        }
+
+        function goToGalleryIndex(idx) {
+            if (galleryImages.length === 0) return;
+            galleryIndex = (idx + galleryImages.length) % galleryImages.length;
+            renderGalleryFrame();
+        }
+
+        if (lightboxThumbs) {
+            lightboxThumbs.addEventListener('click', (e) => {
+                const thumb = e.target.closest('.lightbox-thumb');
+                if (thumb) goToGalleryIndex(parseInt(thumb.getAttribute('data-idx'), 10));
+            });
+        }
+
+        if (lightboxPrev) lightboxPrev.addEventListener('click', () => goToGalleryIndex(galleryIndex - 1));
+        if (lightboxNext) lightboxNext.addEventListener('click', () => goToGalleryIndex(galleryIndex + 1));
+
+        document.addEventListener('keydown', (e) => {
+            if (!lightboxModal || !lightboxModal.classList.contains('active')) return;
+            if (e.key === 'ArrowLeft') goToGalleryIndex(galleryIndex - 1);
+            if (e.key === 'ArrowRight') goToGalleryIndex(galleryIndex + 1);
+            if (e.key === 'Escape') lightboxModal.classList.remove('active');
+        });
+
         portfolioCards.forEach(card => {
             card.addEventListener('click', () => {
-                const imgSrc = card.getAttribute('data-img');
+                const portId = card.getAttribute('data-port-id');
                 const title = card.getAttribute('data-title');
                 const sub = card.getAttribute('data-sub');
 
-                if (lightboxImg && lightboxModal) {
-                    lightboxImg.src = imgSrc;
-                    lightboxTitle.textContent = title;
-                    lightboxSub.textContent = sub;
+                galleryImages = (window._portfolioImagesById && window._portfolioImagesById[portId]) || [];
+                galleryIndex = 0;
+
+                if (lightboxModal && galleryImages.length > 0) {
+                    if (lightboxTitle) lightboxTitle.textContent = title;
+                    if (lightboxSub) lightboxSub.textContent = sub;
+                    renderGalleryFrame();
                     lightboxModal.classList.add('active');
                 }
             });
@@ -510,4 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.open(`https://wa.me/${targetWa}?text=${waText}`, '_blank');
         });
     }
+
+    // Initial render — placed here (end of file) on purpose. See note above.
+    renderPublicSite();
 });

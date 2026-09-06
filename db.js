@@ -122,7 +122,11 @@ const TRIVARA_DEFAULT_DATA = {
             title: "Modern Tropical Cliff Villa",
             subtitle: "Seminyak, Bali — Arsitektur & Landscape",
             location: "Bali, Indonesia",
-            image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=85",
+            images: [
+                "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=85",
+                "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=85",
+                "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=85"
+            ],
             categoryLabel: "Arsitektur Hunian"
         },
         {
@@ -131,7 +135,9 @@ const TRIVARA_DEFAULT_DATA = {
             title: "Monochrome Concrete Residence",
             subtitle: "Bandung, Jawa Barat — Arsitektur & Kontraktor",
             location: "Bandung",
-            image: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=85",
+            images: [
+                "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=85"
+            ],
             categoryLabel: "Arsitektur Hunian"
         },
         {
@@ -140,7 +146,9 @@ const TRIVARA_DEFAULT_DATA = {
             title: "Komorebi Artisan Cafe & Lounge",
             subtitle: "Surabaya — Commercial Architecture",
             location: "Surabaya",
-            image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1200&q=85",
+            images: [
+                "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1200&q=85"
+            ],
             categoryLabel: "Komersial & Resto"
         },
         {
@@ -149,7 +157,9 @@ const TRIVARA_DEFAULT_DATA = {
             title: "Ubud Sanctuary Hill Estate",
             subtitle: "Ubud — Masterplan & Villa Complex",
             location: "Ubud, Bali",
-            image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=85",
+            images: [
+                "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=85"
+            ],
             categoryLabel: "Villa & Lanskap"
         }
     ],
@@ -300,6 +310,15 @@ const DB = {
         }
     }
 };
+
+// Shared helper: get a portfolio item's photos as an array, regardless of
+// whether it was saved with the new `images` array or the old single
+// `image` string (kept for backward compatibility with existing data).
+function getPortfolioImages(p) {
+    if (Array.isArray(p.images) && p.images.length > 0) return p.images;
+    if (p.image) return [p.image];
+    return [];
+}
 
 // Ensure a usable cache exists immediately (sync), then refresh from the
 // server in the background as soon as the script runs.
