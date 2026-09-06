@@ -6,6 +6,7 @@ const TRIVARA_DEFAULT_DATA = {
     branding: {
         logoText: "TRIVARA",
         logoMark: "T",
+        logoImageUrl: "",
         logoSub: "ARCHITECTURE & BUILD",
         studioTitle: "TRIVARA — Architecture & Construction Studio",
         studioMetaDesc: "TRIVARA Studio Arsitektur & Konstruksi Modern. Layanan Desain Rumah Luxury, Kontraktor Bangunan, Masterplan & Visualisasi 3D.",

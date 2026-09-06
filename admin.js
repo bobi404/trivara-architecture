@@ -112,6 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // A. Tab Branding
         const brandLogoText = document.getElementById('brandLogoText');
         const brandLogoMark = document.getElementById('brandLogoMark');
+        const brandLogoImageUrl = document.getElementById('brandLogoImageUrl');
         const brandLogoSub = document.getElementById('brandLogoSub');
         const brandThemeColor = document.getElementById('brandThemeColor');
         const brandStudioTitle = document.getElementById('brandStudioTitle');
@@ -120,6 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (brandLogoText && db.branding) {
             brandLogoText.value = db.branding.logoText || "TRIVARA";
             brandLogoMark.value = db.branding.logoMark || "T";
+            if (brandLogoImageUrl) brandLogoImageUrl.value = db.branding.logoImageUrl || "";
             brandLogoSub.value = db.branding.logoSub || "ARCHITECTURE & BUILD";
             brandThemeColor.value = db.branding.themeColor || "#c8a97e";
             brandStudioTitle.value = db.branding.studioTitle || "";
@@ -185,6 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
             db.branding = {
                 logoText: document.getElementById('brandLogoText').value,
                 logoMark: document.getElementById('brandLogoMark').value,
+                logoImageUrl: document.getElementById('brandLogoImageUrl') ? document.getElementById('brandLogoImageUrl').value.trim() : '',
                 logoSub: document.getElementById('brandLogoSub').value,
                 themeColor: document.getElementById('brandThemeColor').value,
                 studioTitle: document.getElementById('brandStudioTitle').value,
@@ -514,9 +517,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderPortfolioTable(projects) {
         const tbody = document.querySelector('#tablePortfolio tbody');
         if (!tbody) return;
-        tbody.innerHTML = projects.map(p => `
+        tbody.innerHTML = projects.map(p => {
+            const images = getPortfolioImages(p);
+            return `
             <tr>
-                <td><img src="${p.image}" class="table-thumb" alt="Project"></td>
+                <td>
+                    <img src="${images[0] || ''}" class="table-thumb" alt="Project">
+                    ${images.length > 1 ? `<div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.25rem;"><i class="fa-solid fa-images"></i> ${images.length} foto</div>` : ''}
+                </td>
                 <td><strong>${p.title}</strong></td>
                 <td><span class="badge-count">${p.categoryLabel || p.category}</span></td>
                 <td>${p.subtitle}</td>
@@ -527,13 +535,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </td>
             </tr>
-        `).join('');
+        `;
+        }).join('');
     }
 
     window.editPortfolioProject = function (portId) {
         const db = DB.get();
         const p = db.portfolio.find(item => item.id === portId);
         if (!p) return;
+        const images = getPortfolioImages(p);
 
         openModal("Edit Proyek Portofolio", `
             <div class="form-group">
@@ -558,17 +568,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 <input type="text" id="mPortLoc" class="form-control" value="${p.location || ''}" required>
             </div>
             <div class="form-group">
-                <label>URL Foto Proyek HD</label>
-                <input type="url" id="mPortImg" class="form-control" value="${p.image}" required>
+                <label>URL Foto Proyek HD (satu URL per baris, foto pertama jadi cover)</label>
+                <textarea id="mPortImages" class="form-control" rows="5" placeholder="https://...&#10;https://...&#10;https://..." required>${images.join('\n')}</textarea>
             </div>
         `, () => {
             const catSelect = document.getElementById('mPortCategory');
+            const imagesInput = document.getElementById('mPortImages').value
+                .split('\n')
+                .map(url => url.trim())
+                .filter(url => url.length > 0);
+
             p.title = document.getElementById('mPortTitle').value;
             p.category = catSelect.value;
             p.categoryLabel = catSelect.options[catSelect.selectedIndex].text;
             p.subtitle = document.getElementById('mPortSub').value;
             p.location = document.getElementById('mPortLoc').value;
-            p.image = document.getElementById('mPortImg').value;
+            p.images = imagesInput;
+            p.image = imagesInput[0] || ''; // kept in sync for backward compatibility
             DB.set(db);
             renderPortfolioTable(db.portfolio);
             showToast("Proyek Portofolio berhasil diperbarui!");
@@ -611,12 +627,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="text" id="mPortLoc" class="form-control" placeholder="Jakarta Selatan" required>
                 </div>
                 <div class="form-group">
-                    <label>URL Foto Proyek HD</label>
-                    <input type="url" id="mPortImg" class="form-control" placeholder="https://..." required>
+                    <label>URL Foto Proyek HD (satu URL per baris, foto pertama jadi cover)</label>
+                    <textarea id="mPortImages" class="form-control" rows="5" placeholder="https://...&#10;https://...&#10;https://..." required></textarea>
                 </div>
             `, () => {
                 const db = DB.get();
                 const catSelect = document.getElementById('mPortCategory');
+                const imagesInput = document.getElementById('mPortImages').value
+                    .split('\n')
+                    .map(url => url.trim())
+                    .filter(url => url.length > 0);
+
                 db.portfolio.push({
                     id: 'port-' + Date.now(),
                     title: document.getElementById('mPortTitle').value,
@@ -624,7 +645,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     categoryLabel: catSelect.options[catSelect.selectedIndex].text,
                     subtitle: document.getElementById('mPortSub').value,
                     location: document.getElementById('mPortLoc').value,
-                    image: document.getElementById('mPortImg').value
+                    images: imagesInput,
+                    image: imagesInput[0] || '' // kept in sync for backward compatibility
                 });
                 DB.set(db);
                 renderPortfolioTable(db.portfolio);

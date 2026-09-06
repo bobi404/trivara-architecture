@@ -20,7 +20,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // 1. Branding & Logo
         if (db.branding) {
             document.title = db.branding.studioTitle || "TRIVARA — Architecture Studio";
-            document.querySelectorAll('.logo-mark').forEach(el => el.textContent = db.branding.logoMark || "T");
+
+            document.querySelectorAll('.logo-mark').forEach(el => {
+                if (db.branding.logoImageUrl) {
+                    el.innerHTML = `<img src="${db.branding.logoImageUrl}" alt="${db.branding.logoText || 'Logo'}">`;
+                    el.classList.add('logo-mark--image');
+                } else {
+                    el.textContent = db.branding.logoMark || "T";
+                    el.classList.remove('logo-mark--image');
+                }
+            });
+
             document.querySelectorAll('.brand-name').forEach(el => el.textContent = db.branding.logoText || "TRIVARA");
             document.querySelectorAll('.brand-sub').forEach(el => el.textContent = db.branding.logoSub || "ARCHITECTURE & BUILD");
             if (db.branding.themeColor) {
