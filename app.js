@@ -3,6 +3,15 @@
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Declared here (before renderPublicSite() is called below) because the
+    // hero slider logic reads/writes these — declaring them later with `let`
+    // caused a "Cannot access before initialization" error, since
+    // renderPublicSite() -> initHeroSlider() -> startSlideTimer() runs
+    // synchronously and would reach these variables before their original
+    // declaration line executed.
+    let currentSlide = 0;
+    let slideInterval;
+
     // DYNAMIC RENDER ENGINE FROM DB
     function renderPublicSite() {
         if (typeof DB === 'undefined') return;
@@ -259,8 +268,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // HERO SLIDER LOGIC
-    let currentSlide = 0;
-    let slideInterval;
 
     function initHeroSlider() {
         const slides = document.querySelectorAll('.hero-slide');

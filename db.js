@@ -287,9 +287,13 @@ const DB = {
                 localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(json.data));
                 window.dispatchEvent(new Event('trivara_db_updated'));
             } else {
-                // Server has no data yet (first deploy) — seed it with what
-                // we have locally so it becomes the shared source of truth.
-                this._pushToServer(_dbCache);
+                // Server has no data yet (first deploy). Only the admin
+                // session (which has a token) is allowed to seed it — public
+                // visitors on index.html don't have a token and would just
+                // get a harmless-but-noisy 401 if we tried from here.
+                if (sessionStorage.getItem('trivara_admin_token')) {
+                    this._pushToServer(_dbCache);
+                }
             }
         } catch (e) {
             console.warn('Tidak bisa mengambil data terbaru dari server, memakai cache lokal.', e);
